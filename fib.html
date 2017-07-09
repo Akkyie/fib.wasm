@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title></title>
+
+  <link href="node_modules/chartist/dist/chartist.min.css" rel="stylesheet">
+  <style media="screen">
+  body {
+    width: 100%;
+    height: 100%;
+    overflow: scroll;
+  }
+  .ct-series-a .ct-line, .ct-series-a .ct-point {
+    stroke: #F0DB4F;
+  }
+  .ct-series-b .ct-line, .ct-series-b .ct-point {
+    stroke: #4f64f0;
+  }
+  </style>
+
+  <script src="node_modules/chartist/dist/chartist.min.js"></script>
+  <script type="text/javascript">
+  const FIB_MAX = 1000;
+  const BENCH_LOOP = 50;
+
+  function fib(n) {
+    if (n <= 1) return 1;
+    return fibJS(n - 1) + fibJS(n - 2);
+  }
+
+  let memo = [1, 1];
+  function fib_memo(n) {
+    if (n <= 1) return 1;
+    for (let i = 2; i < n; i++) {
+      memo[i] = memo[i - 1] + memo[i - 2];
+    }
+    return memo[n];
+  }
+
+  // const fibJS = fib;
+  const fibJS = fib_memo;
+
+  fetch('fib.wasm')
+  .then(response => response.arrayBuffer())
+  .then(buffer => WebAssembly.instantiate(buffer, {}))
+  // .then(({ instance: { exports: { fib: fibWASM } } }) => {
+  .then(({ instance: { exports: { fib_memo: fibWASM } } }) => {
+    let labels = [];
+    let data = [[], []];
+
+    for (let i = 0; i < FIB_MAX; i++) {
+      labels.push(i);
+
+      let jsTime = 0.0;
+      for (let loop = 0; loop < BENCH_LOOP; loop++) {
+        const jsStart = performance.now();
+        fibJS(i);
+        const time = performance.now() - jsStart;
+        jsTime += time;
+        console.info(`[ JS ][${i} : ${loop}] ${time}`);
+      }
+      jsTime /= BENCH_LOOP;
+
+      let wasmTime = 0.0;
+      for (let loop = 0; loop < BENCH_LOOP; loop++) {
+        const wasmStart = performance.now();
+        fibWASM(i);
+        const time = performance.now() - wasmStart;
+        console.info(`[WASM][${i} : ${loop}] ${time}`);
+        wasmTime += time;
+      }
+      wasmTime /= BENCH_LOOP;
+
+      data[0].push(jsTime);
+      data[1].push(wasmTime);
+
+      new Chartist.Line('#chart', { labels, series: data }, {});
+    }
+  })
+  .catch(error => console.error(error))
+  </script>
+</head>
+<body>
+  <div id="chart" class="ct-chart ct-perfect-fourth"></div>
+</body>
+</html>
