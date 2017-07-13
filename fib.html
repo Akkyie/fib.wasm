@@ -21,31 +21,32 @@
 
   <script src="node_modules/chartist/dist/chartist.min.js"></script>
   <script type="text/javascript">
-  const FIB_MAX = 1000;
-  const BENCH_LOOP = 50;
+  const FIB_MAX = 36;
+  const BENCH_LOOP = 1000;
+  const USE_MEMO = true;
 
   function fib(n) {
     if (n <= 1) return 1;
     return fibJS(n - 1) + fibJS(n - 2);
   }
 
-  let memo = [1, 1];
   function fib_memo(n) {
     if (n <= 1) return 1;
+    let memo = [1, 1];
     for (let i = 2; i < n; i++) {
       memo[i] = memo[i - 1] + memo[i - 2];
     }
     return memo[n];
   }
 
-  // const fibJS = fib;
-  const fibJS = fib_memo;
+  const fibJS = USE_MEMO ? fib_memo : fib;
 
   fetch('fib.wasm')
   .then(response => response.arrayBuffer())
   .then(buffer => WebAssembly.instantiate(buffer, {}))
-  // .then(({ instance: { exports: { fib: fibWASM } } }) => {
-  .then(({ instance: { exports: { fib_memo: fibWASM } } }) => {
+  .then(({ instance: { exports: { fib, fib_memo } } }) => {
+    const fibWASM = USE_MEMO ? fib_memo : fib;
+
     let labels = [];
     let data = [[], []];
 
@@ -61,6 +62,7 @@
         console.info(`[ JS ][${i} : ${loop}] ${time}`);
       }
       jsTime /= BENCH_LOOP;
+      data[0].push(jsTime);
 
       let wasmTime = 0.0;
       for (let loop = 0; loop < BENCH_LOOP; loop++) {
@@ -71,8 +73,6 @@
         wasmTime += time;
       }
       wasmTime /= BENCH_LOOP;
-
-      data[0].push(jsTime);
       data[1].push(wasmTime);
 
       new Chartist.Line('#chart', { labels, series: data }, {});
