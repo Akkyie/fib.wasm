@@ -5,7 +5,7 @@
   <title>fib</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.css" integrity="sha256-Te9+aTaL9j0U5PzLhtAHt+SXlgIT8KT9VkyOZn68hak=" crossorigin="anonymous" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.js" integrity="sha256-UzffRueYhyZDw8Cj39UCnnggvBfa1fPcDQ0auvCbvCc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.0/URI.min.js" integrity="sha256-r1xY9ZVKxg3yQJup3KeUJLtYqrqUt9aeF7KHaprys34=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.1/qs.min.js" integrity="sha256-UsyqL73PW+JViHg798/lArXRiHcAV7EhJlf1PE5DwkQ=" crossorigin="anonymous"></script>
   <style media="screen">
   body {
     width: 100%;
@@ -21,11 +21,13 @@
   </style>
 
   <script type="text/javascript">
-  const uri = URI(window.location.href);
-
-  const USE_MEMO = !uri.hasQuery('nomemo');
+  console.log(Qs);
+  const query = Qs.parse(location.search.substring(1));
+  console.log(query);
+  const USE_MEMO = !('nomemo' in query);
   const FIB_MAX = USE_MEMO ? 2000 : 35;
   const BENCH_LOOP = USE_MEMO ? 10 : 10;
+  const HIGH = ('high' in query) ? Number(query.high) : (USE_MEMO ? 0.25 : 100.0)
 
   function fib(n) {
     if (n <= 1) return 1;
@@ -77,7 +79,7 @@
       wasmTime /= BENCH_LOOP;
       data[1].push(wasmTime);
 
-      new Chartist.Line('#chart', { labels, series: data }, {});
+      new Chartist.Line('#chart', { labels, series: data }, { high: HIGH });
     }
   })
   .catch(error => console.error(error))
