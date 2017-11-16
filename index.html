@@ -5,6 +5,7 @@
   <title>fib</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.css" integrity="sha256-Te9+aTaL9j0U5PzLhtAHt+SXlgIT8KT9VkyOZn68hak=" crossorigin="anonymous" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.js" integrity="sha256-UzffRueYhyZDw8Cj39UCnnggvBfa1fPcDQ0auvCbvCc=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.0/URI.min.js" integrity="sha256-r1xY9ZVKxg3yQJup3KeUJLtYqrqUt9aeF7KHaprys34=" crossorigin="anonymous"></script>
   <style media="screen">
   body {
     width: 100%;
@@ -20,9 +21,11 @@
   </style>
 
   <script type="text/javascript">
-  const FIB_MAX = 360;
-  const BENCH_LOOP = 10;
-  const USE_MEMO = true;
+  const uri = URI(window.location.href);
+
+  const USE_MEMO = !uri.hasQuery('nomemo');
+  const FIB_MAX = USE_MEMO ? 2000 : 35;
+  const BENCH_LOOP = USE_MEMO ? 10 : 10;
 
   function fib(n) {
     if (n <= 1) return 1;
