@@ -2,9 +2,9 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title></title>
-
-  <link href="node_modules/chartist/dist/chartist.min.css" rel="stylesheet">
+  <title>fib</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.css" integrity="sha256-Te9+aTaL9j0U5PzLhtAHt+SXlgIT8KT9VkyOZn68hak=" crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.js" integrity="sha256-UzffRueYhyZDw8Cj39UCnnggvBfa1fPcDQ0auvCbvCc=" crossorigin="anonymous"></script>
   <style media="screen">
   body {
     width: 100%;
@@ -19,10 +19,9 @@
   }
   </style>
 
-  <script src="node_modules/chartist/dist/chartist.min.js"></script>
   <script type="text/javascript">
-  const FIB_MAX = 36;
-  const BENCH_LOOP = 1000;
+  const FIB_MAX = 360;
+  const BENCH_LOOP = 10;
   const USE_MEMO = true;
 
   function fib(n) {
