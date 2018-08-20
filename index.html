@@ -1,91 +1,100 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>fib</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.css" integrity="sha256-Te9+aTaL9j0U5PzLhtAHt+SXlgIT8KT9VkyOZn68hak=" crossorigin="anonymous" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.js" integrity="sha256-UzffRueYhyZDw8Cj39UCnnggvBfa1fPcDQ0auvCbvCc=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.1/qs.min.js" integrity="sha256-UsyqL73PW+JViHg798/lArXRiHcAV7EhJlf1PE5DwkQ=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.css" integrity="sha256-Te9+aTaL9j0U5PzLhtAHt+SXlgIT8KT9VkyOZn68hak="
+    crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.0/chartist.min.js" integrity="sha256-UzffRueYhyZDw8Cj39UCnnggvBfa1fPcDQ0auvCbvCc="
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.5.1/qs.min.js" integrity="sha256-UsyqL73PW+JViHg798/lArXRiHcAV7EhJlf1PE5DwkQ="
+    crossorigin="anonymous"></script>
   <style media="screen">
-  body {
-    width: 100%;
-    height: 100%;
-    overflow: scroll;
-  }
-  .ct-series-a .ct-line, .ct-series-a .ct-point {
-    stroke: #F0DB4F;
-  }
-  .ct-series-b .ct-line, .ct-series-b .ct-point {
-    stroke: #4f64f0;
-  }
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: scroll;
+    }
+
+    .ct-series-a .ct-line,
+    .ct-series-a .ct-point {
+      stroke: #F0DB4F;
+    }
+
+    .ct-series-b .ct-line,
+    .ct-series-b .ct-point {
+      stroke: #4f64f0;
+    }
   </style>
 
   <script type="text/javascript">
-  console.log(Qs);
-  const query = Qs.parse(location.search.substring(1));
-  console.log(query);
-  const USE_MEMO = !('nomemo' in query);
-  const FIB_MAX = USE_MEMO ? 2000 : 35;
-  const BENCH_LOOP = USE_MEMO ? 10 : 10;
-  const HIGH = ('high' in query) ? Number(query.high) : (USE_MEMO ? 0.25 : 100.0)
+    console.log(Qs);
+    const query = Qs.parse(location.search.substring(1));
+    console.log(query);
+    const USE_MEMO = !('nomemo' in query);
+    const FIB_MAX = USE_MEMO ? 2000 : 35;
+    const BENCH_LOOP = USE_MEMO ? 10 : 30;
+    const HIGH = ('high' in query) ? Number(query.high) : (USE_MEMO ? 0.25 : 100.0)
 
-  function fib(n) {
-    if (n <= 1) return 1;
-    return fibJS(n - 1) + fibJS(n - 2);
-  }
-
-  function fib_memo(n) {
-    if (n <= 1) return 1;
-    let memo = [1, 1];
-    for (let i = 2; i < n; i++) {
-      memo[i] = memo[i - 1] + memo[i - 2];
+    function fib(n) {
+      if (n <= 1) return 1;
+      return fibJS(n - 1) + fibJS(n - 2);
     }
-    return memo[n];
-  }
 
-  const fibJS = USE_MEMO ? fib_memo : fib;
-
-  fetch('fib.wasm')
-  .then(response => response.arrayBuffer())
-  .then(buffer => WebAssembly.instantiate(buffer, {}))
-  .then(({ instance: { exports: { fib, fib_memo } } }) => {
-    const fibWASM = USE_MEMO ? fib_memo : fib;
-
-    let labels = [];
-    let data = [[], []];
-
-    for (let i = 0; i < FIB_MAX; i++) {
-      labels.push(i);
-
-      let jsTime = 0.0;
-      for (let loop = 0; loop < BENCH_LOOP; loop++) {
-        const jsStart = performance.now();
-        fibJS(i);
-        const time = performance.now() - jsStart;
-        jsTime += time;
-        console.info(`[ JS ][${i} : ${loop}] ${time}`);
+    function fib_memo(n) {
+      if (n <= 1) return 1;
+      let memo = [1, 1];
+      for (let i = 2; i < n; i++) {
+        memo[i] = memo[i - 1] + memo[i - 2];
       }
-      jsTime /= BENCH_LOOP;
-      data[0].push(jsTime);
-
-      let wasmTime = 0.0;
-      for (let loop = 0; loop < BENCH_LOOP; loop++) {
-        const wasmStart = performance.now();
-        fibWASM(i);
-        const time = performance.now() - wasmStart;
-        console.info(`[WASM][${i} : ${loop}] ${time}`);
-        wasmTime += time;
-      }
-      wasmTime /= BENCH_LOOP;
-      data[1].push(wasmTime);
-
-      new Chartist.Line('#chart', { labels, series: data }, { high: HIGH });
+      return memo[n];
     }
-  })
-  .catch(error => console.error(error))
+
+    const fibJS = USE_MEMO ? fib_memo : fib;
+
+    fetch(USE_MEMO ? 'fib_memo.wasm' : 'fib.wasm')
+      .then(response => response.arrayBuffer())
+      .then(buffer => WebAssembly.instantiate(buffer, {}))
+      .then(({ instance: { exports } }) => {
+        const fibWASM = exports.fib;
+        let labels = [];
+        let data = [[], []];
+
+        for (let i = 0; i <= FIB_MAX; i++) {
+          labels.push(i);
+
+          let jsTime = 0.0;
+          for (let loop = 0; loop < BENCH_LOOP; loop++) {
+            const jsStart = performance.now();
+            fibJS(i);
+            const time = performance.now() - jsStart;
+            jsTime += time;
+            console.info(`[ JS ][${i} : ${loop}] ${time}`);
+          }
+          jsTime /= BENCH_LOOP;
+          data[0].push(jsTime);
+
+          let wasmTime = 0.0;
+          for (let loop = 0; loop < BENCH_LOOP; loop++) {
+            const wasmStart = performance.now();
+            fibWASM(i);
+            const time = performance.now() - wasmStart;
+            console.info(`[WASM][${i} : ${loop}] ${time}`);
+            wasmTime += time;
+          }
+          wasmTime /= BENCH_LOOP;
+          data[1].push(wasmTime);
+
+          new Chartist.Line('#chart', { labels, series: data }, { high: HIGH });
+        }
+      })
+      .catch(error => console.error(error))
   </script>
 </head>
+
 <body>
   <div id="chart" class="ct-chart ct-perfect-fourth"></div>
 </body>
+
 </html>
