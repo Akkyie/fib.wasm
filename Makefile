@@ -1,5 +1,5 @@
 .PHONY: all
-all: fib.wasm fib_memo.wasm fib_start.wasm
+all: fib.wasm fib_stack.wasm fib_heap.wasm fib_start.wasm
 
 .PHONY: clean
 clean:
